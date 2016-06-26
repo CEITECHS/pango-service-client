@@ -19,6 +19,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -92,22 +93,29 @@ class RestClientController{
 
 
 
-@FeignClient("reservation-service")
+@FeignClient(value = "reservation-service", fallback = ReservationClientImpl.class)
 interface ReservationClient{
     @RequestMapping(value = "/reservations", method = RequestMethod.GET)
     Collection<Reservation> findReservation();
 }
+@Service
+class ReservationClientImpl implements ReservationClient{
 
-@Component
-class ReservationIntegration{
+    @Override
+    public Collection<Reservation> findReservation() {
+        return  Collections.emptyList();
+    }
+}
+
+@Service
+class ReservationIntegration {
 
     @Autowired
     private ReservationClient reservationClient;
 
-    Collection<Reservation> getReservationsFallback(){
-        return Collections.emptyList();
-    }
-    @HystrixCommand(fallbackMethod = "getReservationsFallback")
+
+
+   // @HystrixCommand(fallbackMethod = "getReservationsFallback")
     Collection<Reservation> getReservation(){
         return reservationClient.findReservation();
     }
